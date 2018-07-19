@@ -1,0 +1,48 @@
+﻿@{
+    // [Add]
+    // vue子组件
+    Layout = null;
+}
+<style>
+    .excuse-slot {
+        white-space: normal;
+        font-size: 14px;
+    }
+</style>
+<script type="text/x-template" id="excuse-template">
+    <div class="tip-cardAdd">
+        <div class="card-title">
+            文字
+        </div>
+        <div class="card-content">
+            <ul style="list-style: none; margin-top: 10px;">
+                <li>
+                    <Poptip title="时长" placement="left" width="300">
+                        <button type="button" class="btn btn-default card-tips" style="border-width: 0;">文字</button>
+                        <div class="excuse-slot" slot="content">
+                            文字
+                        </div>
+                    </Poptip>
+                </li>
+                <li>
+                    <button type="button" class="btn btn-default card-tips" style="border-width: 0;">
+                        <a href="http://www.baidu.com" style="text-decoration:none" target="_blank">文字</a>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</script>
+
+<script>
+    Vue.component('excuse-template', {
+        template: '#excuse-template',
+        data() {
+            return {
+            }
+        },
+        methods: {
+        },
+        props: ['viewdata']
+    });
+</script>

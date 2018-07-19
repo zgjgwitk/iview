@@ -1,0 +1,210 @@
+﻿@{
+    // [Add]
+    // vue页面
+}
+<style type="text/css">
+    .clear:after {
+        content: '';
+        display: block;
+        clear:both;
+        visibility:hidden;
+        height:0;
+    }
+    body hr, body h3 {
+        margin: 20px 0;
+    }
+
+    .typeahead i {
+        font-size: 1px;
+    }
+
+    .aexpand {
+        text-decoration: underline;
+        color: #0000ff;
+        cursor: pointer;
+    }
+
+    .fixed-modal {
+        position: fixed;
+        top: 226px;
+        right: 0px;
+        z-index: 99;
+        border: 1px solid #E1E1E1;
+        border-radius: 5px;
+    }
+
+    .header {
+        height: 30px;
+        line-height: 30px;
+        border-bottom: 1px solid #E1E1E1;
+        border-radius: 5px;
+        background-color: #F7F7F7;
+    }
+
+    .tableCotent table th {
+        line-height: 30px;
+        background-color: #009dda;
+    }
+
+    .tableCotent table tbody {
+        background-color: #FFFFFF;
+    }
+
+    .tableCotent td,
+    .tableCotent th {
+        padding: 3px 3px;
+        width: 72px;
+        text-align: center;
+        font-size: 12px;
+        color: #333;
+    }
+
+    .serialIdList {
+        margin-left: 10.1%;
+        width: 78%;
+        border: 1px solid #eee;
+        border-radius: 5px;
+    }
+
+    .serialIdList-btn {
+        margin: 7.5px 0 7.5px 15px;
+    }
+
+    .serialIdList-btn-remove {
+        float: right;
+        line-height: inherit;
+    }
+
+    .serialIdList-btn-control {
+        width: 212px;
+        text-align: left;
+        height: 25px;
+    }
+
+    .vaild-err-style {
+        margin-top: 5px;
+        width: 300px;
+    }
+</style>
+<link href="@Url.Content("~/Content/cssforadd.css")?v=@DateTime.Today.ToString("yyyyMMdd")" rel="stylesheet" type="text/css" />
+<div id="amMailPart" class="page-content" style="min-height: 745px;">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="portlet light bordered">
+                <h3>新增邮寄单</h3>
+                <div class="portlet-title" style="height: 44px;min-height: 44px">
+                    <div class="caption">
+                        <h4>
+                            <i class="fa fa-gift"></i>
+                            添加订单
+                        </h4>
+                    </div>
+                    <div class="tools">
+                        <a href="javascript:;" class="collapse">
+                        </a>
+                    </div>
+                </div>
+                <div class="portlet-body form">
+                    <form class="form-horizontal" id="frmAdd" novalidate>
+                        <div class="form-body">
+                            <div class="row" v-show="mailItem && mailItem.length>0">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="serialIdList">
+                                            <a ref="a_errSendDateSer" href="#"></a>
+                                            <div class="btn-group serialIdList-btn" v-for="item in mailItem">
+                                                <button type="button" class="btn btn-info btn-xs serialIdList-btn-control"
+                                                        :class="errSendDateAlert(item) ? 'verification' : ''"
+                                                        @@click="focusSerialId(item.SerialId)">
+                                                    {{item.SerialId}}
+                                                    <span class="glyphicon glyphicon-remove serialIdList-btn-remove"
+                                                          @@click.stop="serialIdClose(item.SerialId)"></span>
+                                                    <div class="cboth"></div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                                <div id="otherAddress">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label">
+                                                    <template v-if="!showAddressSel">
+                                                        邮寄地址
+                                                    </template>
+                                                </label>
+                                                <div class="col-sm-8" prop="areaSel">
+                                                    <Cascader v-model="viewData.areaSel"
+                                                              ref="txt_areaSel"
+                                                              :data="provinceCascader"
+                                                              :load-data="selectAreaInfo"
+                                                              style="width: 82.5%;"
+                                                              size="large"
+                                                              :render-format="selectAreaFormat"
+                                                              @@on-change="areaSelChange"
+                                                              placeholder="省，市，区"></Cascader>
+                                                    <Alert type="warning" show-icon v-show="mainErrors.areaSel"
+                                                           class="vaild-err-style">
+                                                        请选择省，市，区！
+                                                    </Alert>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                
+                                <div class="row" id="mailContent">
+                                    <template v-for="item in mailItem">
+                                        <a href="#" :ref="'mailContent_'+item.SerialId"></a>
+                                        <add-mail-content-template class="clear" :orderdata="item"
+                                                                   :titlelist="invoiceTitleList"
+                                                                   :passengerurl="viewUrl.getInvoicePassengerUrl"
+                                                                   :searchdutynourl="viewUrl.getSearchDutyNoUrl"
+                                                                   ref="contents"
+                                                                   :key="item.SerialId"
+                                                                   @@removeorderevent="removeMailItem"></add-mail-content-template>
+                                    </template>
+                                </div>
+                                <div class="form-actions">
+                                    <div class="footer button-group text-right">
+                                        <button type="button" class="btn btn-primary btn-sm"
+                                                @@click="btnConfrim"
+                                                :data-url="viewUrl.getConfrimUrl">
+                                            确认
+                                        </button>
+                                        <button type="button" class="btn btn-sm"
+                                                @@click="btnCancel"
+                                                :data-url="viewUrl.getCancelUrl">
+                                            取消
+                                        </button>
+                                    </div>
+                                </div>
+                                <template v-if="viewData.projectSource=='1'||viewData.projectSource=='3'" desc="话术说辞">
+                                    <excuse-template :viewdata="viewData"></excuse-template>
+                                </template>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <preview-template :viewdata="submitItem" @@save="btnSave" ref="previewModal"></preview-template>
+</div>
+@section scripts{
+    @Html.Partial("MailAdd/_AddMailContent")
+    @Html.Partial("MailAdd/_Excuse")
+    @Html.Partial("MailAdd/_PhoneOrder")
+    @Html.Partial("MailAdd/_Preview")
+    <link href="@Url.Content("~/Content/vue/iview.css")" rel="stylesheet" />
+    <script src="@Url.Content("~/Content/vue/iview.min.js")"></script>
+    
+    <script src="@Url.Content("~/Content/main/Post/AddMail.js?v="+DateTime.Now.ToString("yyyyMMdd"))"></script>
+    
+}
+
+

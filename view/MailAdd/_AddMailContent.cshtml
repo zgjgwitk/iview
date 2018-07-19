@@ -1,0 +1,103 @@
+﻿@{
+    // [Add]
+    // vue子组件
+    Layout = null;
+}
+
+<style>
+    .contentinfo .btn-group {
+        margin-right: 5px;
+    }
+
+    #menu_content .mailcontent_radio {
+        margin-left: 0px;
+        position: initial;
+    }
+
+    .vaild-err-style-cont {
+        margin-top: 5px;
+        width: 300px;
+    }
+</style>
+<script type="text/x-template" id="add-mail-content-template">
+    <div :id="orderdata.SerialId" class="contentinfo">
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-left"></label>
+                <div class="col-sm-8">
+                    <div class="portlet light bordered" id="menu_content">
+
+                        <div class="portlet-body form" v-if="orderdata.InsuranceList != null && orderdata.InsuranceList.length>0">
+
+                            <div class="form-group" v-show="orderdata.insInfo.FPIVIsEticket==1 && orderdata.insInfo.FPIVInvoiceKind!=1">
+                                <label class="control-label col-sm-3">
+                                    <span class="required">*</span>抬头
+                                </label>
+                                <div class="col-sm-7 inline-control">
+                                    <customer-identifier-template v-if="orderdata.insInfo.FPIVInvoiceKind == 2"
+                                                                  placeholder="个人姓名或公司名称"
+                                                                  :param="orderdata.insInfo"
+                                                                  :propTitle="orderdata.insInfo.FPIVTitle"
+                                                                  :titlelist="titlelist"
+                                                                  @@checktitle="templateCheckTitle"
+                                                                  @@hidetips="templateHideErrTips"
+                                                                  limit="10"></customer-identifier-template>
+                                    <i-input v-else type="text" value=""
+                                             :ref="`txt_ins_title_${orderdata.SerialId}`"
+                                             placeholder="个人姓名或公司名称"
+                                             @@on-change="checkInsTitle(orderdata.insInfo)"
+                                             @@on-focus="checkInsTitle(orderdata.insInfo)"
+                                             v-model.trim="orderdata.insInfo.FPIVTitle">
+                                        <Dropdown slot="append" trigger="click" v-if="titlelist && titlelist.length>0"
+                                                  style="text-align:left;">
+                                            <i-button type="primary">
+                                                选择
+                                                <Icon type="arrow-down-b"></Icon>
+                                            </i-button>
+                                            <DropdownMenu slot="list">
+                                                <DropdownItem v-for="dataTitle in titlelist" :key="dataTitle" :name="dataTitle"
+                                                              @@click.native="setInvoiceTitle(dataTitle,orderdata.insInfo)">
+                                                    {{dataTitle}}
+                                                </DropdownItem>
+                                            </DropdownMenu>
+                                        </Dropdown>
+                                    </i-input>
+                                </div>
+                                <div class="col-sm-7 col-sm-offset-3" style="padding:5px 0 0 0">
+                                    <Alert type="warning" show-icon v-show="orderdata.insInfo.err.title" class="vaild-err-style-cont">
+                                        {{orderdata.insInfo.err.titleErr}}
+                                    </Alert>
+                                </div>
+                            </div>
+                            <div v-show="orderdata.insInfo.FPIVIsEticket==1 && orderdata.insInfo.FPIVInvoiceKind==2">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">
+                                        <span class="required">*</span>识别号
+                                    </label>
+                                    <div class="col-sm-7 inline-control">
+                                        <input type="text" class="form-control"
+                                               :ref="`txt_ins_identifier_${orderdata.SerialId}`"
+                                               placeholder="识别号"
+                                               @@on-change="checkIdentifier(orderdata.insInfo)"
+                                               @@on-focus="checkIdentifier(orderdata.insInfo)"
+                                               v-model="orderdata.insInfo.FPIVCustomerIdentifier" />
+                                    </div>
+                                    <div class="col-sm-7 col-sm-offset-3" style="padding:0">
+                                        <Alert type="warning" show-icon v-show="orderdata.insInfo.err.customerIdentifier" class="vaild-err-style-cont">
+                                            {{orderdata.insInfo.err.customerIdentifierErr}}
+                                        </Alert>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+@Html.Partial("MailAdd/_SearchCustomerIdentifier")
+
+<script type="text/javascript" src="~/Content/main/Post/Mail/_AddMailContent.js"></script>

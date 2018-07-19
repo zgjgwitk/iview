@@ -1,0 +1,250 @@
+﻿@{
+    // [Add]
+    // vue子组件
+    Layout = null;
+}
+<style>
+    .dutynocomplete-warp {
+        width: 100%;
+        padding-right: 15px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        float: left;
+        list-style: none;
+        text-shadow: none;
+    }
+
+    .dutynocomplete {
+        margin-left: 7px;
+    }
+
+    .dutynocomplete strong {
+        color: #FF6600;
+    }
+
+    .dutynocomplete ul {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        position: absolute;
+        list-style: none;
+        background: #fff;
+        margin: 10px 0 0 0;
+        display: inline-block;
+        width: 95%;
+        border: 1px solid #eee;
+        -webkit-border-radius: 4px;
+        -moz-border-radius: 4px;
+        -ms-border-radius: 4px;
+        -o-border-radius: 4px;
+        border-radius: 4px;
+    }
+
+            .dutynocomplete ul li a {
+                padding: 8px 14px;
+                color: #555;
+                text-decoration: none;
+                display: block;
+                clear: both;
+                font-weight: 300;
+                font-size: 14px;
+                line-height: 18px;
+                white-space: nowrap;
+            }
+
+                .dutynocomplete ul li a:hover, .dutynocomplete ul li.focus-list a {
+                    text-decoration: none;
+                    background-image: none;
+                    background-color: #ebeaea;
+                    color: #555;
+                    filter: none;
+                }
+
+    .pop-append {
+        width: 100px;
+    }
+</style>
+
+<script type="text/x-template" id="customer-identifier-template">
+    <div class="dutynocomplete-warp">
+        <i-input type="text" value=""
+                 :placeholder="placeholder"
+                 v-model.trim="param.FPIVTitle"
+                 @@on-change="input(param.FPIVTitle)"
+                 @@on-blur="hideAll"
+                 @@on-keydown="keydown"
+                 @@on-focus="focus">
+            <Dropdown slot="append" trigger="click" v-if="titlelist && titlelist.length>0"
+                      style="text-align:left;">
+                <i-button type="primary">
+                    选择
+                    <Icon type="arrow-down-b"></Icon>
+                </i-button>
+                <DropdownMenu slot="list">
+                    <DropdownItem v-for="data in titlelist" :key="data" :name="data"
+                                  @@click.native="setTitle(data)">
+                        {{data}}
+                    </DropdownItem>
+                </DropdownMenu>
+            </Dropdown>
+        </i-input>
+
+        <div class="dutynocomplete" v-show="showList">
+            <ul>
+                <li v-for="(data,index) in json" :class="activeClass(index)">
+                    <a href="#"
+                       @@click.prevent="selectList(data)"
+                       @@mousemove="mousemove(index)"
+                       v-html="setStrong(data)">
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</script>
+
+<script>
+    Vue.component('customer-identifier-template', {
+        template: '#customer-identifier-template',
+        /* 父组件传入数据
+         * param 订单开票项实体
+         * titlelist 常用抬头列表
+         * propTitle 抬头默认值
+         * limit 拉取的数据个数的限制
+         */
+        props: ['param', 'titlelist', 'propTitle', 'placeholder', 'limit'],
+        data: function () {
+            return {
+                url: '@(Url.Action("SearchDutyNo", "ProcessPost"))',
+                showList: false,
+                json: [],//匹配结果
+                focusList: '',
+                inputWait: null
+            }
+        },
+        methods: {
+            //点击选项常用抬头
+            setTitle: function (val) {
+                this.param.FPIVTitle = val;
+                this.param.FPIVCustomerIdentifier = '';
+            },
+            //抬头输入,自动匹配
+            input: function (val) {
+                this.$emit('checktitle', this.param);//_AddMailContent.js 的方法,验证抬头
+                clearTimeout(this.inputWait);
+                //触发调用getData方法
+                this.inputWait = setTimeout(() => {
+                    this.getData(val);
+                }, 250);
+            },
+            //隐藏补全列表
+            hideAll: function (e) {
+                //为了让blur方法延迟执行，以便能够成功执行click方法
+                setTimeout(() => {
+                    this.showList = false;
+                }, 250);
+            },
+            //获得焦点,自动展开匹配框
+            focus: function (e) {
+                this.focusList = 0;
+                this.input(this.param.FPIVTitle);
+            },
+            mousemove: function (i) {
+                this.focusList = i;
+            },
+            //键盘移动
+            keydown: function (e) {
+                let key = e.keyCode;
+                //如果没有展示的list，则直接返回
+                if (!this.showList) return;
+                switch (key) {
+                    case 40: //向上
+                        this.focusList++;
+                        e.preventDefault()
+                        break;
+                    case 38: //向下
+                        this.focusList--;
+                        e.preventDefault()
+                        break;
+                    case 13: //确认
+                        this.selectList(this.json[this.focusList]);
+                        this.showList = false;
+                        break;
+                    case 27: //退出
+                        this.showList = false;
+                        break;
+                }
+                //点中的序号超过数组的长度时，循环到第一个
+                let listLength = this.json.length - 1;
+                this.focusList = this.focusList > listLength ? 0 : this.focusList < 0 ? listLength : this.focusList;
+            },
+            //更新样式
+            activeClass: function (i) {
+                return {
+                    'focus-list': i == this.focusList
+                };
+            },
+            //选中列表中的哪一项
+            selectList: function (data) {
+                //按照指定的JSON键值显示在模型上
+                this.param.FPIVTitle = data.CompanyName;
+                this.param.FPIVCustomerIdentifier = this.getCreditCode(data);
+                this.$emit('hidetips', this.param);//_AddMailContent.js 的方法,隐藏错误提示
+                //传递给父组件中的对象
+                this.showList = false;
+            },
+            //获取数据
+            getData: function (val) {
+                if (!val) {
+                    this.json = [];
+                    this.showList = false;
+                    return;
+                }
+
+                let _this = this;
+                if (this.url != null) {
+                    let ajax = new XMLHttpRequest();
+                    let count = parseInt(this.limit);
+
+                    ajax.open('GET', `${this.url}?keyword=${val}`, true);
+                    ajax.send();
+                    ajax.addEventListener('progress', function (data) {
+                        if (data.lengthComputable) { }
+                    });
+                    ajax.addEventListener('loadend', function (data) {
+                        let arr = JSON.parse(this.responseText);
+                        let result = arr ? arr : [];
+                        if (result.length > count)
+                            result = result.slice(0, count);
+                        _this.json = result;
+                        if (!_this.json || _this.json.length == 0) {
+                            _this.json = [];
+                            _this.showList = false;
+                        } else {
+                            _this.showList = true;
+                        }
+                    });
+                }
+            },
+            //设置高亮
+            setStrong: function (data) {
+                if (this.param.FPIVTitle) {
+                    var l = this.param.FPIVTitle;
+                    var u = this.param.FPIVTitle.toUpperCase();
+                    var h = data.CompanyName;
+                    if (h.indexOf(l) > -1) {
+                        h = h.replace(l, `<strong>${l}</strong>`);
+                    } else if (h.indexOf(u) > -1) {
+                        h = h.replace(u, `<strong>${u}</strong>`);
+                    }
+                    return `${h}<br /><i>${this.getCreditCode(data)}</i>`;
+                } else {
+                }
+            },
+            
+            getCreditCode: data => { return data.CreditCode != '' ? data.CreditCode : data.RatepayerCode; }
+        },
+        created: function () {
+        }
+    });
+</script>

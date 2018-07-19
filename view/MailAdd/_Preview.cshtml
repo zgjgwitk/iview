@@ -1,0 +1,98 @@
+﻿@{
+    // [Add]
+    // vue子组件
+    Layout = null;
+}
+<style>
+    .previewModal .txt-right {
+        text-align: right;
+    }
+
+    .previewModal .caption {
+        display: inline-block;
+        font-size: 18px;
+        line-height: 18px;
+        padding: 10px 0;
+    }
+
+        .previewModal .caption .caption-subject {
+            font-size: 16px;
+        }
+
+    .previewModal .tools {
+        display: inline-block;
+        padding: 12px 0 8px 0;
+    }
+</style>
+
+<script type="text/x-template" id="preview-template">
+    <Modal title="信息" v-model="modalPreview" :closable="true" width="1200" class="previewModal"
+           @@ok-text="保存" @@cancel-text="返回" @@on-ok="save">
+
+        @*part-1*@
+        <div style="padding-left:45px;line-height:30px;">
+            <Row>
+                <i-col span="2" class="txt-right">
+                    <label class="control-label">项目来源：</label>
+                </i-col>
+                <i-col span="6">
+                    <label class="control-label" id="presourceDesc">{{viewdata.FPBVResourceDesc}}</label>
+                </i-col>
+                <i-col span="2" class="txt-right">
+                    <label class="control-label">订单号：</label>
+                </i-col>
+                <i-col span="6">
+                    <label class="control-label" id="pserialid">{{viewdata.FPBVSerialId}}</label>
+                </i-col>
+            </Row>
+            
+        </div>
+        <i-menu :open-names="['1','2']" width="100%">
+            @*part-2*@
+            <Submenu name="1" v-show="(viewdata.EticketList && viewdata.EticketList.length>0)||(invList && invList.length>0)||(insList && insList.length>0)">
+                <template slot="title">
+                    <div class="caption">
+                        <i class="fa fa-cogs font-green-sharp"></i>
+                        <span class="font-green-sharp bold uppercase">内容</span>
+                    </div>
+                </template>
+                <Row style="padding-left:45px;" v-show="invList && invList.length>0">
+                    <div class="caption">
+                        <i class="fa fa-cogs font-green-sharp"></i>
+                        <span class="caption-subject font-green-sharp bold uppercase">信息</span>
+                    </div>
+                </Row>
+            </Submenu>
+            
+        </i-menu>
+    </Modal>
+</script>
+
+<script>
+    Vue.component('preview-template', {
+        template: '#preview-template',
+        props: ['viewdata'],
+        data: function () {
+            return {
+                modalPreview: false,//整个对话框显示
+            }
+        },
+        computed: {
+            einvList() {
+                if (!this.viewdata.InvoiceList) return []
+                return this.viewdata.InvoiceList.filter(item => item.FPIVElectronicInvoices > 0)
+            },
+        },
+        methods: {
+            //外部使用
+            show: function () {
+                this.modalPreview = true;
+            },
+            save: function () {
+                this.$emit('save');//调用 AddMail.js -- btnSave();
+            },
+        },
+        watch: {
+        }
+    });
+</script>

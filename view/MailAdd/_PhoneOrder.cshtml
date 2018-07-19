@@ -1,0 +1,69 @@
+﻿@{
+    // [Add]
+    // vue子组件
+    Layout = null;
+}
+<style>
+    #itable .ivu-table-cell {
+        padding: 0 !important
+    }
+
+    #itable div.checker {
+        display: none !important
+    }
+</style>
+<script type="text/x-template" id="phoneorder-template">
+    <i-table id="itable" ref="phoneorder" border :columns="columns" :data="viewdata"
+             @@on-selection-change="handleSelectChange"></i-table>
+</script>
+
+<script>
+    var PhoneOrderVc = Vue.component('phoneorder-template', {
+        template: '#phoneorder-template',
+        data() {
+            return {
+                columns: [
+                    {
+                        type: 'selection',
+                        width: 40,
+                        align: 'center'
+                    },
+                    {
+                        type: 'index',
+                        width: 45,
+                        align: 'center',
+                        title: '序号'
+                    },
+                    {
+                        title: '单号',
+                        width: 170,
+                        align: 'center',
+                        key: 'serialId'
+                    },
+                    {
+                        title: '项目',
+                        width: 65,
+                        align: 'center',
+                        render(h, { row }) {
+                            let name = '';
+                            if (row.projectId === '1') {
+                                name = 'xx';
+                            } else {
+                                name = 'xx';
+                            }
+                            return h('span', name);
+                        }
+                    },
+                ],
+                serIdList: []
+            }
+        },
+        methods: {
+            handleSelectChange: function (items) {
+                this.serIdList = [];
+                this.$emit('serialidevent', this.serIdList);
+            }
+        },
+        props: ['viewdata']
+    });
+</script>
